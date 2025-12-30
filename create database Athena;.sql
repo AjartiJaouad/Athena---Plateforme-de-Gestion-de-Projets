@@ -1,5 +1,5 @@
-create database Athena;
-use athena;
+CREATE DATABASE athena;
+USE athena;
 CREATE TABLE User (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) NOT NULL,
