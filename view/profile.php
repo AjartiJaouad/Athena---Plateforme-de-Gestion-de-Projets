@@ -8,8 +8,9 @@ if (!isset($_SESSION['user_id'])){
 
 $user_id = $_SESSION['user_id'];
 $message = '';
-
-
+$stmt=$con -> prepare("SELECT username ,email ,role FROM user WHERE user_id = ?");
+$stmt ->execute([$user_id]);
+$user =$stmt -> fetch(PDO::FETCH_ASSOC);
 
 
 ?>
