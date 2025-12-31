@@ -2,7 +2,7 @@
 session_start();
 require '../config/database.php';
 if (!isset($_SESSION['user_id'])) {
-    header('Location :login.php');
+    header('Location: login.php');
     exit;
 }
 
@@ -58,14 +58,14 @@ if (isset($_POST['update'])) {
 
             <div>
                 <label class="block text-white text-sm mb-2">Nom d'utilisateur</label>
-                <input type="text" name="username"
+                <input type="text" name="username" value="<?= htmlspecialchars($user['username']) ?>"
 
                     class="w-full px-3 py-2 bg-transparent text-white border-b border-slate-500 focus:border-purple-400 outline-none">
             </div>
 
             <div>
                 <label class="block text-white text-sm mb-2">Email</label>
-                <input type="email" name="email"
+                <input type="email" name="email" value="<?= htmlspecialchars($user['email']) ?>"
 
                     class="w-full px-3 py-2 bg-transparent text-white border-b border-slate-500 focus:border-purple-400 outline-none">
             </div>
@@ -85,7 +85,8 @@ if (isset($_POST['update'])) {
         </form>
 
         <div class="mt-6 text-center text-white text-sm">
-            <p>Rôle :</p>
+            <p>Rôle : <strong><?= $user['role'] ?></strong></p>
+            </p>
         </div>
 
         <div class="mt-6 flex justify-between text-sm">
