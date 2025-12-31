@@ -1,17 +1,37 @@
-<?php 
+<?php
 session_start();
 require '../config/database.php';
-if (!isset($_SESSION['user_id'])){
+if (!isset($_SESSION['user_id'])) {
     header('Location :login.php');
     exit;
 }
 
 $user_id = $_SESSION['user_id'];
 $message = '';
-$stmt=$con -> prepare("SELECT username ,email ,role FROM user WHERE user_id = ?");
-$stmt ->execute([$user_id]);
-$user =$stmt -> fetch(PDO::FETCH_ASSOC);
+$stmt = $con->prepare("SELECT username ,email ,role FROM user WHERE user_id = ?");
+$stmt->execute([$user_id]);
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+if (isset($_POST['update'])) {
+    $username = trim($_POST['username']);
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+
+    if (!empty($password)) {
+        $hash =  password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $con->prepare("UPDATE user SET username =? ,email = ? WHERE user_id = ?");
+
+        $stmt->execute([
+            $username,
+            $email,
+            $user_id
+        ]);
+    } else {
+        $stmt = $con->prepare("UPDATE user SET username=?, email=? WHERE user_id=?");
+        $stmt->execute([$username, $email, $user_id]);
+    }
+    $message = "Profil mis à jour !";
+}
 
 ?>
 
@@ -32,21 +52,21 @@ $user =$stmt -> fetch(PDO::FETCH_ASSOC);
             Mon Profil
         </h1>
 
-      
+
 
         <form method="POST" class="space-y-6">
 
             <div>
                 <label class="block text-white text-sm mb-2">Nom d'utilisateur</label>
-                <input type="text" name="username" 
-                    
+                <input type="text" name="username"
+
                     class="w-full px-3 py-2 bg-transparent text-white border-b border-slate-500 focus:border-purple-400 outline-none">
             </div>
 
             <div>
                 <label class="block text-white text-sm mb-2">Email</label>
-                <input type="email" name="email" 
-                   
+                <input type="email" name="email"
+
                     class="w-full px-3 py-2 bg-transparent text-white border-b border-slate-500 focus:border-purple-400 outline-none">
             </div>
 
