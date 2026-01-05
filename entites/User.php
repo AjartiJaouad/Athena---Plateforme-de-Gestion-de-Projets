@@ -88,4 +88,10 @@ class User
 
         ]);
     }
+    public function delete($db)
+    {
+        $sql = "DELETE FROM user WHERE user_id = :id ";
+        $stmt = $db->prepare($sql);
+        return $stmt->execute([' :id' => $this->user_id]);
+    }
 }
