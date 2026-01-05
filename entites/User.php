@@ -53,4 +53,18 @@ class User
     public function verifyPassword($inputPassword): bool {
         return password_verify($inputPassword, $this->password);
     }
+    public function create($db){
+        $sql = "INSERT INTO user (username ,email ,password ,role) VALUES (:username , :email, :password, :role)";
+        $stmt = $db->prepare($sql);
+        $hashedPassword = password_hash($this->password ,PASSWORD_DEFAULT);
+        return $stmt ->execute([
+            ':username' => $this->username ,
+            ':email'   => $this->email ,
+            ':password' => $this->$hashedPassword,
+            ':role'=> $this->role instanceof UserRole ? $this->role->value :$this->role
+
+
+
+        ]);
+    }
 }
