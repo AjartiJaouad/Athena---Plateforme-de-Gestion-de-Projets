@@ -5,31 +5,36 @@ enum UserRole: string
     case EDITOR = 'editor';
     case USER = 'user';
 }
+
 class User
 {
+    private int $user_id;
+    private string $username;
+    private string $email;
+    private string $password;
+    private UserRole $role;
 
-    private  $user_id;
-    private  $username;
-    private  $email;
-    private  $password;
-    private $role;
-    public function __construct($user_id, $username, $email, $password, $role)
+    public function __construct(int $user_id, string $username, string $email, string $password, UserRole|string $role)
     {
         $this->user_id = $user_id;
-        $this->username = $username;
-        $this->email = $email;
+        $this->setUsername($username);
+        $this->setEmail($email);
         $this->setPassword($password);
-        $this->role = $role;
+        $this->setRole($role);
     }
-    public function  getUserID()
+
+    // Getters
+    public function getUserID(): int
     {
         return $this->user_id;
     }
-    public function getUserName()
+
+    public function getUsername(): string
     {
         return $this->username;
     }
-    public function getEmail()
+
+    public function getEmail(): string
     {
         return $this->email;
     }
@@ -38,60 +43,98 @@ class User
     {
         return $this->role;
     }
-    public function setUserNAme(
-        $username
-    ) {
+
+    // setters
+    public function setUsername(string $username): void
+    {
+        if (empty($username)) {
+            throw new InvalidArgumentException("Le nom d'utilisateur ne peut pas être vide.");
+        }
         $this->username = $username;
     }
 
-    public function setEmail($email)
+    public function setEmail(string $email): void
     {
-        if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->email = $email;
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException("Email invalide.");
         }
+        $this->email = $email;
     }
-    public function setPassword($password)
+
+    public function setPassword(string $password): void
     {
         $this->password = password_hash($password, PASSWORD_DEFAULT);
     }
-    public function setRole($role)
+
+    public function setRole(UserRole|string $role): void
     {
+        if (is_string($role)) {
+            $role = match (strtolower($role)) {
+                'admin' => UserRole::ADMIN,
+                'editor' => UserRole::EDITOR,
+                'user' => UserRole::USER,
+                default => throw new InvalidArgumentException("Rôle invalide.")
+            };
+        }
         $this->role = $role;
     }
-    public function verifyPassword($inputPassword): bool
+
+    //  Verfication de password 
+    public function verifyPassword(string $inputPassword): bool
     {
         return password_verify($inputPassword, $this->password);
     }
-    public function create($db)
+
+    // CRUD create user 
+    public function create(PDO $db): bool
     {
-        $sql = "INSERT INTO user (username ,email ,password ,role) VALUES (:username , :email, :password, :role)";
+        $sql = "INSERT INTO user (username, email, password, role) 
+                VALUES (:username, :email, :password, :role)";
         $stmt = $db->prepare($sql);
-        $hashedPassword = password_hash($this->password, PASSWORD_DEFAULT);
         return $stmt->execute([
             ':username' => $this->username,
-            ':email'   => $this->email,
-            ':password' => $hashedPassword,
-            ':role' => $this->role instanceof UserRole ? $this->role->value : $this->role
-
+            ':email'    => $this->email,
+            ':password' => $this->password,
+            ':role'     => $this->role->value
         ]);
     }
-    public function update($db)
+    // update user
+    public function update(PDO $db): bool
     {
-        $sql = "UPDATE user SET username = :username ,email = :email , eole = :role WHERE user_id =id";
+        $sql = "UPDATE user SET username = :username, email = :email, role = :role 
+                WHERE user_id = :id";
         $stmt = $db->prepare($sql);
-
         return $stmt->execute([
             ':username' => $this->username,
-            ':email'   => $this->email,
-            ':role' => $this->role instanceof UserRole ? $this->role->value : $this->role,
+            ':email'    => $this->email,
+            ':role'     => $this->role->value,
             ':id'       => $this->user_id
-
         ]);
     }
-    public function delete($db)
+
+    public function delete(PDO $db): bool
     {
-        $sql = "DELETE FROM user WHERE user_id = :id ";
+        $sql = "DELETE FROM user WHERE user_id = :id";
         $stmt = $db->prepare($sql);
-        return $stmt->execute([' :id' => $this->user_id]);
+        return $stmt->execute([':id' => $this->user_id]);
+    }
+
+    //FIND Use
+    public static function findById(PDO $db, int $id): ?self
+    {
+        $sql = "SELECT * FROM user WHERE user_id = :id";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($data) {
+            return new self(
+                $data['user_id'],
+                $data['username'],
+                $data['email'],
+                $data['password'],
+                $data['role']
+            );
+        }
+        return null;
     }
 }

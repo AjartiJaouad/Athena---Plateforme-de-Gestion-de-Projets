@@ -1,3 +1,33 @@
+<?php
+session_start();
+require 'config/database.php';
+require 'User.php';
+$message = ''; 
+
+if (isset($_POST['login'])) {
+    $email = trim($_POST['email']);
+    $password = $_POST['password'];
+
+
+    $stmt = $con->prepare("SELECT * FROM user WHERE email = :email");
+    $stmt->execute([':email' => $email]);
+    $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+     if ($data){
+        $user = new User(
+$data['user_id'],
+$data['username'],
+$data['email'],
+$data['password'],
+$data['role']
+
+        );
+     }
+}
+
+?>
+
+
 
 <!DOCTYPE html>
 <html lang="fr">
