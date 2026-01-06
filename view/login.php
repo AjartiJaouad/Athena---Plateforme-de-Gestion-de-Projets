@@ -33,7 +33,7 @@ if (isset($_POST['login'])) {
             $_SESSION['username'] = $user->getUsername();
             $_SESSION['role']     = $user->getRole()->value;
 
-            header('Location: dashboard.php');
+            header('Location: dashborard.php');
             exit;
         } else {
             $message = "Mot de passe ou Email incorrect";
