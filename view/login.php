@@ -1,28 +1,44 @@
 <?php
 session_start();
-require 'config/database.php';
-require 'User.php';
-$message = ''; 
+
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../entites/User.php';
+
+$message = '';
 
 if (isset($_POST['login'])) {
     $email = trim($_POST['email']);
     $password = $_POST['password'];
 
-
     $stmt = $con->prepare("SELECT * FROM user WHERE email = :email");
     $stmt->execute([':email' => $email]);
     $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
-     if ($data){
+    if (!$data) {
+        $message = "Utilisateur non trouvé";
+    } else {
         $user = new User(
-$data['user_id'],
-$data['username'],
-$data['email'],
-$data['password'],
-$data['role']
-
+            $data['user_id'],
+            $data['username'],
+            $data['email'],
+            $data['password'],
+            $data['role']
         );
-     }
+
+        if ($user->verifyPassword($password)) {
+            // pour la séccurté 
+            session_regenerate_id(true);
+
+            $_SESSION['user_id']  = $user->getUserID();
+            $_SESSION['username'] = $user->getUsername();
+            $_SESSION['role']     = $user->getRole()->value;
+
+            header('Location: dashboard.php');
+            exit;
+        } else {
+            $message = "Mot de passe ou Email incorrect";
+        }
+    }
 }
 
 ?>

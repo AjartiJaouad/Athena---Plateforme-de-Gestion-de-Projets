@@ -2,8 +2,8 @@
 enum UserRole: string
 {
     case ADMIN = 'admin';
-    case EDITOR = 'editor';
-    case USER = 'user';
+    case CHEF_PROJET = 'chef_projet';
+    case MEMBRE        = 'membre';
 }
 
 class User
@@ -61,23 +61,28 @@ class User
         $this->email = $email;
     }
 
-    public function setPassword(string $password): void
+    public function setPassword(string $hashedPassword): void
     {
-        $this->password = password_hash($password, PASSWORD_DEFAULT);
+        $this->password = $hashedPassword;
     }
 
     public function setRole(UserRole|string $role): void
     {
-        if (is_string($role)) {
-            $role = match (strtolower($role)) {
-                'admin' => UserRole::ADMIN,
-                'editor' => UserRole::EDITOR,
-                'user' => UserRole::USER,
-                default => throw new InvalidArgumentException("Rôle invalide.")
-            };
+        if ($role instanceof UserRole) {
+            $this->role = $role;
+            return;
         }
-        $this->role = $role;
+
+        $role = strtolower(trim($role));
+
+        $this->role = match ($role) {
+            'admin'        => UserRole::ADMIN,
+            'chef_projet'  => UserRole::CHEF_PROJET,
+            'membre'       => UserRole::MEMBRE,
+            default => throw new InvalidArgumentException("Rôle invalide.")
+        };
     }
+
 
     //  Verfication de password 
     public function verifyPassword(string $inputPassword): bool
@@ -118,6 +123,11 @@ class User
         $stmt = $db->prepare($sql);
         return $stmt->execute([':id' => $this->user_id]);
     }
+    public function hashAndSetPassword(string $plainPassword): void
+    {
+        $this->password = password_hash($plainPassword, PASSWORD_DEFAULT);
+    }
+
 
     //FIND Use
     public static function findById(PDO $db, int $id): ?self
@@ -137,4 +147,24 @@ class User
         }
         return null;
     }
+ public static function findByEmail(PDO $db ,string $email ): ?self
+ {
+    $sql = "SELECT * FROM user WHERE email = :email";
+    $stmt = $db->prepare($sql);
+    $stmt ->execute([':email'=> $email]);
+    $data = $stmt ->fetch(PDO::FETCH_ASSOC);
+    if ($data){
+        return new self(
+            $data['user_id'],
+            $data['username'],
+            $data['email'],
+            $data['password'],
+            $data['role']
+        );
+    }
+    return null ;
+
+ }
+
+
 }
