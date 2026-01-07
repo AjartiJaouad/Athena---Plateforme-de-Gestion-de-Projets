@@ -1,38 +1,31 @@
 <?php
-session_start();
-require '../config/database.php';
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
+require_once '../config/database.php';
+require_once '../entites/User.php';
+require_once '../services/AuthService.php';
 
-$user_id = $_SESSION['user_id'];
+session_start();
+AuthService::check();
+$user = AuthService::user($con);
+
 $message = '';
-$stmt = $con->prepare("SELECT username ,email ,role FROM user WHERE user_id = ?");
-$stmt->execute([$user_id]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (isset($_POST['update'])) {
     $username = trim($_POST['username']);
     $email = trim($_POST['email']);
     $password = $_POST['password'];
 
+    // Mettre à jour via objet User
+    $user->setUsername($username);
+    $user->setEmail($email);
     if (!empty($password)) {
-        $hash =  password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $con->prepare("UPDATE user SET username =? ,email = ? WHERE user_id = ?");
-
-        $stmt->execute([
-            $username,
-            $email,
-            $user_id
-        ]);
-    } else {
-        $stmt = $con->prepare("UPDATE user SET username=?, email=? WHERE user_id=?");
-        $stmt->execute([$username, $email, $user_id]);
+        $user->hashAndSetPassword($password);
     }
+
+    // Update en DB
+    $user->update($con);
+
     $message = "Profil mis à jour !";
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -52,21 +45,21 @@ if (isset($_POST['update'])) {
             Mon Profil
         </h1>
 
-
+        <?php if ($message): ?>
+            <p class="text-center text-white mb-4"><?= htmlspecialchars($message) ?></p>
+        <?php endif; ?>
 
         <form method="POST" class="space-y-6">
 
             <div>
                 <label class="block text-white text-sm mb-2">Nom d'utilisateur</label>
-                <input type="text" name="username" value="<?= htmlspecialchars($user['username']) ?>"
-
+                <input type="text" name="username" value="<?= htmlspecialchars($user->getUsername()) ?>"
                     class="w-full px-3 py-2 bg-transparent text-white border-b border-slate-500 focus:border-purple-400 outline-none">
             </div>
 
             <div>
                 <label class="block text-white text-sm mb-2">Email</label>
-                <input type="email" name="email" value="<?= htmlspecialchars($user['email']) ?>"
-
+                <input type="email" name="email" value="<?= htmlspecialchars($user->getEmail()) ?>"
                     class="w-full px-3 py-2 bg-transparent text-white border-b border-slate-500 focus:border-purple-400 outline-none">
             </div>
 
@@ -85,8 +78,7 @@ if (isset($_POST['update'])) {
         </form>
 
         <div class="mt-6 text-center text-white text-sm">
-            <p>Rôle : <strong><?= $user['role'] ?></strong></p>
-            </p>
+            <p>Rôle : <strong><?= htmlspecialchars($user->getRole()->value) ?></strong></p>
         </div>
 
         <div class="mt-6 flex justify-between text-sm">
