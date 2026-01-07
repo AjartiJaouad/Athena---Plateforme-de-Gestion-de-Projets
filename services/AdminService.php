@@ -38,4 +38,12 @@ class AdminService
             ':id' => $userId
         ]);
     }
+    public function toggleUserActive(int $userId, bool $active): bool
+    {
+        $stmt = $this->db->prepare("UPDATE user SET active = :active WHERE user_id = :id");
+        return $stmt->execute([
+            ':active' => $active ? 1 : 0,
+            ':id' => $userId
+        ]);
+    }
 }
