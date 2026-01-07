@@ -46,4 +46,22 @@ class AdminService
             ':id' => $userId
         ]);
     }
+
+    public function getStats(): array
+    {
+        $stats = [];
+
+        
+        $stmt = $this->db->query("SELECT role, COUNT(*) as count FROM user GROUP BY role");
+        $stats['users_by_role'] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        $stmt = $this->db->query("SELECT COUNT(*) as total FROM project");
+        $stats['total_projects'] = $stmt->fetchColumn();
+
+     
+        $stmt = $this->db->query("SELECT COUNT(*) as total FROM task");
+        $stats['total_tasks'] = $stmt->fetchColumn();
+
+        return $stats;
+    }
 }
