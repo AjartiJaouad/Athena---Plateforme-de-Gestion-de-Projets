@@ -1,18 +1,19 @@
-<?php 
+<?php
 
 
 require_once __DIR__ . '/../entites/User.php';
 
-class AdminService {
+class AdminService
+{
 
 
-    private PDO $db ;
+    private PDO $db;
     public function __construct(PDO $db)
     {
-       $this->db = $db ;
+        $this->db = $db;
     }
 
- public function getAllUsers(): array
+    public function getAllUsers(): array
     {
         $stmt = $this->db->prepare("SELECT * FROM user ORDER BY user_id ASC");
         $stmt->execute();
@@ -29,11 +30,12 @@ class AdminService {
         return $users;
     }
 
-
-
-
-
-
+    public function setUserRole(int $userId, UserRole $role): bool
+    {
+        $stmt = $this->db->prepare("UPDATE user SET role = :role WHERE user_id = :id");
+        return $stmt->execute([
+            ':role' => $role->value,
+            ':id' => $userId
+        ]);
+    }
 }
-
-?>
