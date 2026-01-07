@@ -1,24 +1,13 @@
 <?php
 require_once __DIR__ . '/../entites/User.php';
 require_once __DIR__ . '/../config/database.php';
-
-session_start();
-
 require_once '../services/AuthService.php';
 
+session_start();
 AuthService::check();
 $user = AuthService::user($con);
-
-
-$user = User::findById($con, $_SESSION['user_id']);
-if (!$user) {
-    session_destroy();
-    header('Location: login.php');
-    exit();
-}
-
-
 ?>
+
 
 <!DOCTYPE html>
 <html lang="fr">
