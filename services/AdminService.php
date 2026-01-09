@@ -51,17 +51,28 @@ class AdminService
     {
         $stats = [];
 
-        
+
         $stmt = $this->db->query("SELECT role, COUNT(*) as count FROM user GROUP BY role");
         $stats['users_by_role'] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
         $stmt = $this->db->query("SELECT COUNT(*) as total FROM project");
         $stats['total_projects'] = $stmt->fetchColumn();
 
-     
+
         $stmt = $this->db->query("SELECT COUNT(*) as total FROM task");
         $stats['total_tasks'] = $stmt->fetchColumn();
 
         return $stats;
+    }
+    public function updateUserRole(int $userId, string $role): bool
+    {
+        $stmt = $this->db->prepare(
+            "UPDATE user SET role = :role WHERE user_id = :id"
+        );
+
+        return $stmt->execute([
+            ':role' => $role,
+            ':id'   => $userId
+        ]);
     }
 }
